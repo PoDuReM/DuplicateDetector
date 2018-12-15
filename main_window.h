@@ -23,6 +23,8 @@ public slots:
     void finish_searching();
     void stop_searching();
     void set_progress(qint8 const &percent);
+signals:
+    void find_duplicates(QString const &dir);
 
 private:
     std::unique_ptr<Ui::MainWindow> ui;

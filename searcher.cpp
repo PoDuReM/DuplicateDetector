@@ -43,7 +43,7 @@ void Searcher::get_duplicates(QString const &dir) {
             return;
         }
         QMap<QString, QVector<QString>> first2Files;
-        for (auto file : itSize.value()) {
+        for (auto const &file : itSize.value()) {
             first2Files[get_first_k(file, std::min(itSize.key(), READK))].push_back(file);
         }
         for (auto itFirst = first2Files.begin(); itFirst != first2Files.end(); ++itFirst) {
@@ -59,7 +59,7 @@ void Searcher::get_duplicates(QString const &dir) {
                 return;
             }
             QMap<QByteArray, QVector<QString>> hash2Files;
-            for (auto file : itFirst.value()) {
+            for (auto const &file : itFirst.value()) {
                 hash2Files[get_hash(file)].push_back(file);
                 view_size += itSize.key();
                 if (changed_progress()) {
@@ -81,16 +81,16 @@ void Searcher::get_duplicates(QString const &dir) {
     emit finish();
 }
 
-QByteArray Searcher::get_hash(const QString &filepath) {
-    QCryptographicHash md5(QCryptographicHash::Md5);
-    QFile file(filepath);
-    file.open(QIODevice::ReadOnly);
-    md5.addData(file.readAll());
-    return md5.result();
-}
-
 QString Searcher::get_first_k(QString const& filepath, qint64 x){
     QFile file(filepath);
     file.open(QIODevice::ReadOnly);
     return file.read(x);
+}
+
+QByteArray Searcher::get_hash(const QString &filepath) {
+    QFile file(filepath);
+    file.open(QIODevice::ReadOnly);
+    QCryptographicHash md5(QCryptographicHash::Md5);
+    md5.addData(file.readAll());
+    return md5.result();
 }

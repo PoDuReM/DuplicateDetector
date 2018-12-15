@@ -51,7 +51,7 @@ void main_window::select_directory() {
            this,
            SLOT(print_duplicates(QVector<QString> const &)));
     connect(searcher, &Searcher::finish, this, &main_window::finish_searching);
-    connect(&searchThread, &QThread::finished, searcher, &QObject::deleteLater);
+    connect(this, &main_window::find_duplicates, searcher, &Searcher::get_duplicates);
     
     ui->progressBar->reset();
     ui->progressBar->setValue(1);
@@ -59,7 +59,7 @@ void main_window::select_directory() {
     ui->actionStop->setHidden(false);
     ui->actionDelete->setHidden(true);
     searchThread.start();
-    searcher->get_duplicates(dir);
+    find_duplicates(dir);
 }
 
 void main_window::print_duplicates(QVector<QString> const &duplicates) {
@@ -68,7 +68,7 @@ void main_window::print_duplicates(QVector<QString> const &duplicates) {
     QFileInfo file_info(duplicates[0]);
     item->setText(1, QString::number(file_info.size()));
 
-    for (QString file : duplicates) {
+    for (QString const &file : duplicates) {
         QTreeWidgetItem* childItem = new QTreeWidgetItem();
         childItem->setText(0, file);
         item->addChild(childItem);
