@@ -32,6 +32,10 @@ void Searcher::get_duplicates(QString const &dir) {
         }
     }
     for (auto itSize = size2Files.begin(); itSize != size2Files.end(); ++itSize) {
+        if (check_stop()) {
+            stop_search(cantOpen);
+            return;
+        }
         if (itSize.value().size() == 1) {
             view_size += itSize.key();
             if (changed_progress()) {
@@ -39,12 +43,12 @@ void Searcher::get_duplicates(QString const &dir) {
             }
             continue;
         }
-        if (check_stop()) {
-            stop_search(cantOpen);
-            return;
-        }
         QMap<QString, QVector<QString>> first2Files;
         for (auto const &file : itSize.value()) {
+            if (check_stop()) {
+                stop_search(cantOpen);
+                return;
+            }
             try {
                 first2Files[read_first_k(file, std::min(itSize.key(), READK))].push_back(file);
             } catch (QString &) {
@@ -57,6 +61,10 @@ void Searcher::get_duplicates(QString const &dir) {
             }
         }
         for (auto itFirst = first2Files.begin(); itFirst != first2Files.end(); ++itFirst) {
+            if (check_stop()) {
+                stop_search(cantOpen);
+                return;
+            }
             if (itFirst.value().size() == 1) {
                 view_size += itSize.key();
                 if (changed_progress()) {
@@ -64,12 +72,12 @@ void Searcher::get_duplicates(QString const &dir) {
                 }
                 continue;
             }
-            if (check_stop()) {
-                stop_search(cantOpen);
-                return;
-            }
             QMap<QByteArray, QVector<QString>> hash2Files;
             for (auto const &file : itFirst.value()) {
+                if (check_stop()) {
+                    stop_search(cantOpen);
+                    return;
+                }
                 try {
                     hash2Files[get_hash(file)].push_back(file);
                 } catch (QString &) {
@@ -82,12 +90,12 @@ void Searcher::get_duplicates(QString const &dir) {
                 }
             }
             for (auto itHash = hash2Files.begin(); itHash != hash2Files.end(); ++itHash) {
-                if (itHash.value().size() == 1) {
-                    continue;
-                }
                 if (check_stop()) {
                     stop_search(cantOpen);
                     return;
+                }
+                if (itHash.value().size() == 1) {
+                    continue;
                 }
                 emit send_duplicates(itHash.value());
             }
