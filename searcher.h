@@ -22,6 +22,7 @@ signals:
     void send_duplicates(QVector<QString> const &);
     void finish();
     void progress(qint8 const &);
+    void send_message(QString const &);
 
 private:
     QByteArray get_hash(QString const &filepath);

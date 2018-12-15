@@ -47,6 +47,7 @@ void Searcher::get_duplicates(QString const &dir) {
             try {
                 first2Files[read_first_k(file, std::min(itSize.key(), READK))].push_back(file);
             } catch (QString &) {
+                emit send_message("Can't open " + file.mid(dir.size(), file.size() - dir.size()));
                 view_size += itSize.key();
                 if (changed_progress()) {
                     emit progress(percent);
@@ -69,7 +70,9 @@ void Searcher::get_duplicates(QString const &dir) {
             for (auto const &file : itFirst.value()) {
                 try {
                     hash2Files[get_hash(file)].push_back(file);
-                } catch (QString &) {}
+                } catch (QString &) {
+                    emit send_message("Can't open " + file.mid(dir.size(), file.size() - dir.size()));
+                }
                 view_size += itSize.key();
                 if (changed_progress()) {
                     emit progress(percent);

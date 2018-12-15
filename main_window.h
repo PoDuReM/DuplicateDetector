@@ -25,6 +25,7 @@ public slots:
     void finish_searching();
     void stop_searching();
     void set_progress(qint8 const &percent);
+    void show_message(QString const &message);
 signals:
     void find_duplicates(QString const &dir);
 

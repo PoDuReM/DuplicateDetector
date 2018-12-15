@@ -45,7 +45,8 @@ void main_window::select_directory() {
 
     qRegisterMetaType<QVector<QString>>("QVector<QString>");
 
-    connect(searcher, &Searcher::progress, this, &main_window::set_progress);         
+    connect(searcher, &Searcher::progress, this, &main_window::set_progress);
+    connect(searcher, &Searcher::send_message, this, &main_window::show_message);
     connect(searcher,
             SIGNAL(send_duplicates(QVector<QString> const &)),
             this,
@@ -76,6 +77,12 @@ void main_window::print_duplicates(QVector<QString> const &duplicates) {
         item->addChild(child_item);
     }
     ui->treeWidget->addTopLevelItem(item);
+}
+
+void main_window::show_message(QString const &message) {
+    QMessageBox* messageBox = new QMessageBox();
+    messageBox->setText(message);
+    messageBox->open();
 }
 
 void main_window::set_progress(qint8 const &percent) {
