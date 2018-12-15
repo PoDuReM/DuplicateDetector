@@ -119,19 +119,25 @@ void main_window::delete_items() {
     }
 
     QVector<QString> cantDelete;
+    QSet<QTreeWidgetItem*> changed_parents;
     for (auto const &item : del_items) {
         QFile file(dir + item->text(0));
         if (file.remove()) {
-            if (item->parent()->childCount() < 2) {
-                delete item->parent();
-            } else {
-                item->parent()->setText(0, QString("Duplicate " + QString::number(item->parent()->childCount() - 1) + " files"));
-                item->parent()->removeChild(item);
-            }
+            changed_parents.insert(item->parent());
+            item->parent()->removeChild(item);
         } else {
             cantDelete.append(item->text(0));
         }
     }
+
+    for (auto const &item : changed_parents) {
+        if (item->childCount() > 1) {
+            item->setText(0, QString("Duplicate " + QString::number(item->childCount()) + " files"));
+        } else {
+            delete item;
+        }
+    }
+
     if (cantDelete.size() > 0) {
         QString message = "Can't delete " + QString::number(cantDelete.size()) + " files :\n";
         for (auto const &filepath : cantDelete) {
