@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QCryptographicHash>
 #include <QDirIterator>
+#include <QDesktopServices>
 
 class Searcher :  public QObject {
     Q_OBJECT
@@ -24,8 +25,8 @@ signals:
 
 private:
     QByteArray get_hash(QString const &filepath);
-    QString get_first_k(QString const &filepath, qint64 k);
-    bool checkStop();
+    QString read_first_k(QString const &filepath, qint64 k);
+    bool check_stop();
 };
 
 #endif // SEARCHER_H

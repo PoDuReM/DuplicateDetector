@@ -2,7 +2,7 @@
 
 const qint64 READK = 30;
 
-bool Searcher::checkStop() {
+bool Searcher::check_stop() {
     return QThread::currentThread()->isInterruptionRequested();
 }
 
@@ -25,7 +25,7 @@ void Searcher::get_duplicates(QString const &dir) {
         qint64 sz = QFileInfo(path).size();
         size2Files[sz].push_back(path);
         all_size += sz;
-        if (checkStop()){
+        if (check_stop()){
             emit finish();
             return;
         }
@@ -38,13 +38,20 @@ void Searcher::get_duplicates(QString const &dir) {
             }
             continue;
         }
-        if (checkStop()) {
+        if (check_stop()) {
             emit finish();
             return;
         }
         QMap<QString, QVector<QString>> first2Files;
         for (auto const &file : itSize.value()) {
-            first2Files[get_first_k(file, std::min(itSize.key(), READK))].push_back(file);
+            try {
+                first2Files[read_first_k(file, std::min(itSize.key(), READK))].push_back(file);
+            } catch (QString &) {
+                view_size += itSize.key();
+                if (changed_progress()) {
+                    emit progress(percent);
+                }
+            }
         }
         for (auto itFirst = first2Files.begin(); itFirst != first2Files.end(); ++itFirst) {
             if (itFirst.value().size() == 1) {
@@ -54,13 +61,15 @@ void Searcher::get_duplicates(QString const &dir) {
                 }
                 continue;
             }
-            if (checkStop()) {
+            if (check_stop()) {
                 emit finish();
                 return;
             }
             QMap<QByteArray, QVector<QString>> hash2Files;
             for (auto const &file : itFirst.value()) {
-                hash2Files[get_hash(file)].push_back(file);
+                try {
+                    hash2Files[get_hash(file)].push_back(file);
+                } catch (QString &) {}
                 view_size += itSize.key();
                 if (changed_progress()) {
                     emit progress(percent);
@@ -70,7 +79,7 @@ void Searcher::get_duplicates(QString const &dir) {
                 if (itHash.value().size() == 1) {
                     continue;
                 }
-                if (checkStop()) {
+                if (check_stop()) {
                     emit finish();
                     return;
                 }
@@ -81,16 +90,20 @@ void Searcher::get_duplicates(QString const &dir) {
     emit finish();
 }
 
-QString Searcher::get_first_k(QString const& filepath, qint64 x){
+QString Searcher::read_first_k(QString const& filepath, qint64 k) {
     QFile file(filepath);
-    file.open(QIODevice::ReadOnly);
-    return file.read(x);
+    if (file.open(QIODevice::ReadOnly)) {
+        return file.read(k);
+    }
+    throw QString("File can't open");
 }
 
 QByteArray Searcher::get_hash(const QString &filepath) {
     QFile file(filepath);
-    file.open(QIODevice::ReadOnly);
-    QCryptographicHash md5(QCryptographicHash::Md5);
-    md5.addData(file.readAll());
-    return md5.result();
+    if (file.open(QIODevice::ReadOnly)) {
+        QCryptographicHash md5(QCryptographicHash::Md5);
+        md5.addData(file.readAll());
+        return md5.result();
+    }
+    throw QString("File can't open");
 }

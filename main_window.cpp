@@ -1,6 +1,4 @@
 #include <main_window.h>
-#include <ui_main_window.h>
-#include <searcher.h>
 
 main_window::main_window(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
@@ -24,6 +22,7 @@ main_window::main_window(QWidget* parent) : QMainWindow(parent), ui(new Ui::Main
     connect(ui->actionDelete, SIGNAL(released()), SLOT(delete_items()));
     ui->actionDelete->setHidden(true);
     ui->actionStop->setHidden(true);
+    ui->progressBar->setHidden(true);
 }
 
 main_window::~main_window() {
@@ -32,8 +31,8 @@ main_window::~main_window() {
 }
 
 void main_window::select_directory() {
-    QString dir = QFileDialog::getExistingDirectory(this, "Select Directory for Scanning",
-                                                    QString(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    dir = QFileDialog::getExistingDirectory(this, "Select Directory for Scanning",
+                                            QString(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks) + "/";
 
     if (dir.size() == 0) {
         return;
@@ -42,6 +41,7 @@ void main_window::select_directory() {
     setWindowTitle(QString("Duplicates in directory - %1").arg(dir));
     searcher = new Searcher();
     searcher->moveToThread(&searchThread);
+    connect(&searchThread, &QThread::finished, searcher, &QObject::deleteLater);
 
     qRegisterMetaType<QVector<QString>>("QVector<QString>");
 
@@ -52,7 +52,9 @@ void main_window::select_directory() {
            SLOT(print_duplicates(QVector<QString> const &)));
     connect(searcher, &Searcher::finish, this, &main_window::finish_searching);
     connect(this, &main_window::find_duplicates, searcher, &Searcher::get_duplicates);
-    
+    connect(ui->treeWidget, SIGNAL(itemDoubleClicked(QTreeWidgetItem*, int)), this, SLOT(open_file(QTreeWidgetItem*, int)));
+
+    ui->progressBar->setHidden(false);
     ui->progressBar->reset();
     ui->progressBar->setValue(1);
     ui->actionScan_Directory->setDisabled(true);
@@ -68,10 +70,10 @@ void main_window::print_duplicates(QVector<QString> const &duplicates) {
     QFileInfo file_info(duplicates[0]);
     item->setText(1, QString::number(file_info.size()));
 
-    for (QString const &file : duplicates) {
-        QTreeWidgetItem* childItem = new QTreeWidgetItem();
-        childItem->setText(0, file);
-        item->addChild(childItem);
+    for (QString const &filepath : duplicates) {
+        QTreeWidgetItem* child_item = new QTreeWidgetItem();
+        child_item->setText(0, filepath.mid(dir.size(), filepath.size() - dir.size()));
+        item->addChild(child_item);
     }
     ui->treeWidget->addTopLevelItem(item);
 }
@@ -81,27 +83,36 @@ void main_window::set_progress(qint8 const &percent) {
 }
 
 void main_window::delete_items() {
-    QList<QTreeWidgetItem*> sel_items = ui->treeWidget->selectedItems();
-    QMessageBox::StandardButton answer = QMessageBox::question(this, "Deleting",
-                                                                "Do you want to delete selected files?");
-    if (answer == QMessageBox::Yes) {
-        for (auto item : sel_items) {
-            assert(item->isSelected());
-            QFile file(item->text(0));
-            if (file.remove()) {
-                if (item->parent()->childCount() < 3) {
-                    delete item->parent();
-                } else {
-                    item->parent()->setText(0, QString("Duplicate " + QString::number(item->parent()->childCount() - 1) + " files"));
-                    item->parent()->removeChild(item);
-                }
-            } else if (!file.exists() && item->childCount() > 0) {
-                for (auto child : item->takeChildren()) {
-                    QFile(child->text(0)).remove();
-                }
-                delete item;
+    auto answer = QMessageBox::question(this, "Deleting", "Do you want to delete selected files?");
+    if (answer == QMessageBox::No) {
+        return;
+    }
+    auto sel_items = ui->treeWidget->selectedItems();
+//    for (auto const &item : sel_items) {
+//        if (!QFile(item->text(0)).exists()) {
+//            for (auto const &child : item->takeChildren()) {
+//                child->setSelected(true);
+//            }
+//        }
+//    }
+//    sel_items = ui->treeWidget->selectedItems();
+    for (auto const &item : sel_items) {
+        QFile file(dir + item->text(0));
+        if (file.remove()) {
+            if (item->parent()->childCount() < 2) {
+                delete item->parent();
+            } else {
+                item->parent()->setText(0, QString("Duplicate " + QString::number(item->parent()->childCount() - 1) + " files"));
+                item->parent()->removeChild(item);
             }
         }
+    }
+}
+
+void main_window::open_file(QTreeWidgetItem *item, int) {
+    QFile file(item->text(0));
+    if (file.exists()) {
+        QDesktopServices::openUrl(item->text(0));
     }
 }
 

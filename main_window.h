@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <searcher.h>
+#include <ui_main_window.h>
 
 namespace Ui {
     class MainWindow;
@@ -20,6 +21,7 @@ public slots:
     void select_directory();
     void show_about_dialog();
     void delete_items();
+    void open_file(QTreeWidgetItem*, int);
     void finish_searching();
     void stop_searching();
     void set_progress(qint8 const &percent);
@@ -28,7 +30,8 @@ signals:
 
 private:
     std::unique_ptr<Ui::MainWindow> ui;
-    Searcher* searcher= nullptr;
+    Searcher* searcher = nullptr;
+    QString dir;
 };
 
 #endif // MAINWINDOW_H
