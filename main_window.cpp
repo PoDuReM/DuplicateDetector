@@ -49,7 +49,7 @@ void main_window::select_directory() {
     connect(searcher,
            SIGNAL(send_duplicates(QVector<QString> const &)),
            this,
-           SLOT(print_`tes(QVector<QString> const &)));
+           SLOT(print_duplicates(QVector<QString> const &)));
     connect(searcher, &Searcher::finish, this, &main_window::finish_searching);
     connect(&searchThread, &QThread::finished, searcher, &QObject::deleteLater);
     
