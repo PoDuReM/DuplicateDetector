@@ -68,7 +68,7 @@ void main_window::show_duplicates(QVector<QString> const &duplicates) {
     QFileInfo file_info(duplicates[0]);
     item->setText(1, QString::number(file_info.size()));
 
-    for (QString file : duplicates){
+    for (QString file : duplicates) {
         QTreeWidgetItem* childItem = new QTreeWidgetItem();
         childItem->setText(0, file);
         item->addChild(childItem);
@@ -86,15 +86,16 @@ void main_window::delete_items() {
                                                                 "Do you want to delete selected files?");
     if (answer == QMessageBox::Yes) {
         for (auto item : sel_items) {
+            assert(item->isSelected());
             QFile file(item->text(0));
             if (file.remove()) {
-                if (item->parent()->childCount() < 3){
+                if (item->parent()->childCount() < 3) {
                     delete item->parent();
                 } else {
                     item->parent()->setText(0, QString("There are " + QString::number(item->parent()->childCount() - 1) + " files"));
                     item->parent()->removeChild(item);
                 }
-            } else if (!file.exists()) {
+            } else if (!file.exists() && item->childCount() > 0) {
                 for (auto child : item->takeChildren()) {
                     QFile(child->text(0)).remove();
                 }

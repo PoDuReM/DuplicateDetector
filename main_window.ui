@@ -57,7 +57,7 @@
     <item row="0" column="2">
      <widget class="QPushButton" name="actionStop">
       <property name="text">
-       <string>StopSearch</string>
+       <string>Stop</string>
       </property>
      </widget>
     </item>

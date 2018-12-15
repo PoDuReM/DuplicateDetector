@@ -61,13 +61,13 @@ void Searcher::get_duplicates(QString const &dir) {
             QMap<QByteArray, QVector<QString>> hash2Files;
             for (auto file : itFirst.value()) {
                 hash2Files[get_hash(file)].push_back(file);
+                view_size += itSize.key();
+                if (changed_progress()) {
+                    emit progress(percent);
+                }
             }
             for (auto itHash = hash2Files.begin(); itHash != hash2Files.end(); ++itHash) {
                 if (itHash.value().size() == 1) {
-                    view_size += itSize.key();
-                    if (changed_progress()) {
-                        emit progress(percent);
-                    }
                     continue;
                 }
                 if (checkStop()) {
@@ -75,10 +75,6 @@ void Searcher::get_duplicates(QString const &dir) {
                     return;
                 }
                 emit send_duplicates(itHash.value());
-                view_size += itSize.key() * itHash.value().size();
-                if (changed_progress()) {
-                    emit progress(percent);
-                }
             }
         }
     }
