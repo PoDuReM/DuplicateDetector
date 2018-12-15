@@ -98,13 +98,28 @@ void main_window::set_progress(qint8 const &percent) {
 
 void main_window::delete_items() {
     auto sel_items = ui->treeWidget->selectedItems();
+    QSet<QTreeWidgetItem*> del_items;
+
+    for (auto const &item : sel_items) {
+        if (item->text(1).size() > 0) {
+            auto cur = item->takeChildren();
+            for (auto const &child : cur) {
+                del_items.insert(child);
+                item->addChild(child);
+            }
+        } else {
+            del_items.insert(item);
+        }
+    }
+
     auto answer = QMessageBox::question(this, "Deleting",
-                                        "Do you want to delete " + QString::number(sel_items.size()) + " selected files?");
+                                        "Do you want to delete " + QString::number(del_items.size()) + " selected files?");
     if (answer == QMessageBox::No) {
         return;
     }
+
     QVector<QString> cantDelete;
-    for (auto const &item : sel_items) {
+    for (auto const &item : del_items) {
         QFile file(dir + item->text(0));
         if (file.remove()) {
             if (item->parent()->childCount() < 2) {
