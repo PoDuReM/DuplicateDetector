@@ -47,9 +47,9 @@ void main_window::select_directory() {
 
     connect(searcher, &Searcher::progress, this, &main_window::set_progress);         
     connect(searcher,
-           SIGNAL(send_duplicates(QVector<QString> const &)),
-           this,
-           SLOT(print_duplicates(QVector<QString> const &)));
+            SIGNAL(send_duplicates(QVector<QString> const &)),
+            this,
+            SLOT(print_duplicates(QVector<QString> const &)));
     connect(searcher, &Searcher::finish, this, &main_window::finish_searching);
     connect(this, &main_window::find_duplicates, searcher, &Searcher::get_duplicates);
     connect(ui->treeWidget, SIGNAL(itemDoubleClicked(QTreeWidgetItem*, int)), this, SLOT(open_file(QTreeWidgetItem*, int)));
