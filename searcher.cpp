@@ -90,7 +90,7 @@ void Searcher::get_duplicates(QString const &dir) {
     emit finish();
 }
 
-QString Searcher::read_first_k(QString const& filepath, qint64 k) {
+QString Searcher::read_first_k(QString const &filepath, qint64 k) {
     QFile file(filepath);
     if (file.open(QIODevice::ReadOnly)) {
         return file.read(k);

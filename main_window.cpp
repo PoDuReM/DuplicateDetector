@@ -109,7 +109,7 @@ void main_window::delete_items() {
     }
 }
 
-void main_window::open_file(QTreeWidgetItem *item, int) {
+void main_window::open_file(QTreeWidgetItem* item, int) {
     QFile file(item->text(0));
     if (file.exists()) {
         QDesktopServices::openUrl(item->text(0));
