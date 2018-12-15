@@ -44,27 +44,27 @@ void main_window::select_directory() {
     searcher->moveToThread(&searchThread);
 
     qRegisterMetaType<QVector<QString>>("QVector<QString>");
-    connect(&searchThread, &QThread::finished, searcher, &QObject::deleteLater);
-    connect(this, &main_window::find_duplicates, searcher, &Searcher::get_duplicates);
+
+    connect(searcher, &Searcher::progress, this, &main_window::set_progress);         
     connect(searcher,
            SIGNAL(send_duplicates(QVector<QString> const &)),
            this,
-           SLOT(show_duplicates(QVector<QString> const &)));
+           SLOT(print_`tes(QVector<QString> const &)));
     connect(searcher, &Searcher::finish, this, &main_window::finish_searching);
-    connect(searcher, &Searcher::progress, this, &main_window::set_progress);
-
+    connect(&searchThread, &QThread::finished, searcher, &QObject::deleteLater);
+    
     ui->progressBar->reset();
     ui->progressBar->setValue(1);
     ui->actionScan_Directory->setDisabled(true);
     ui->actionStop->setHidden(false);
     ui->actionDelete->setHidden(true);
     searchThread.start();
-    find_duplicates(dir);
+    searcher->get_duplicates(dir);
 }
 
-void main_window::show_duplicates(QVector<QString> const &duplicates) {
+void main_window::print_duplicates(QVector<QString> const &duplicates) {
     QTreeWidgetItem* item = new QTreeWidgetItem();
-    item->setText(0, QString("There are " + QString::number(duplicates.size())) + " files");
+    item->setText(0, QString("Duplicate " + QString::number(duplicates.size())) + " files");
     QFileInfo file_info(duplicates[0]);
     item->setText(1, QString::number(file_info.size()));
 
@@ -92,7 +92,7 @@ void main_window::delete_items() {
                 if (item->parent()->childCount() < 3) {
                     delete item->parent();
                 } else {
-                    item->parent()->setText(0, QString("There are " + QString::number(item->parent()->childCount() - 1) + " files"));
+                    item->parent()->setText(0, QString("Duplicate " + QString::number(item->parent()->childCount() - 1) + " files"));
                     item->parent()->removeChild(item);
                 }
             } else if (!file.exists() && item->childCount() > 0) {

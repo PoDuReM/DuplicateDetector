@@ -15,7 +15,7 @@
 class Searcher :  public QObject {
     Q_OBJECT
 
-public slots:
+public:
     void get_duplicates(QString const &dir);
 signals:
     void send_duplicates(QVector<QString> const &);
