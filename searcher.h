@@ -16,7 +16,7 @@
 class Searcher :  public QObject {
     Q_OBJECT
 
-public:
+public slots:
     void get_duplicates(QString const &dir);
 signals:
     void send_duplicates(QVector<QString> const &);
@@ -28,6 +28,7 @@ private:
     QByteArray get_hash(QString const &filepath);
     QString read_first_k(QString const &filepath, qint64 k);
     bool check_stop();
+    void stop_search(QVector<QString> const &cantOpen);
 };
 
 #endif // SEARCHER_H

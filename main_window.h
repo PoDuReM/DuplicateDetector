@@ -3,6 +3,7 @@
 
 #include <searcher.h>
 #include <ui_main_window.h>
+#include <QCloseEvent>
 
 namespace Ui {
     class MainWindow;
@@ -30,6 +31,7 @@ signals:
     void find_duplicates(QString const &dir);
 
 private:
+    void closeEvent(QCloseEvent* bar);
     std::unique_ptr<Ui::MainWindow> ui;
     Searcher* searcher = nullptr;
     QString dir;

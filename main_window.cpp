@@ -32,10 +32,12 @@ main_window::~main_window() {
 
 void main_window::select_directory() {
     dir = QFileDialog::getExistingDirectory(this, "Select Directory for Scanning",
-                                            QString(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks) + "/";
-
+                                            QString(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
     if (dir.size() == 0) {
         return;
+    }
+    if (dir.back() != '/') {
+        dir += "/";
     }
     ui->treeWidget->clear();
     setWindowTitle(QString("Duplicates in directory - %1").arg(dir));
@@ -62,7 +64,7 @@ void main_window::select_directory() {
     ui->actionStop->setHidden(false);
     ui->actionDelete->setHidden(true);
     searchThread.start();
-    find_duplicates(dir);
+    emit find_duplicates(dir);
 }
 
 void main_window::print_duplicates(QVector<QString> const &duplicates) {
@@ -79,6 +81,11 @@ void main_window::print_duplicates(QVector<QString> const &duplicates) {
     ui->treeWidget->addTopLevelItem(item);
 }
 
+void main_window::closeEvent(QCloseEvent* bar) {
+    stop_searching();
+    bar->accept();
+}
+
 void main_window::show_message(QString const &message) {
     QMessageBox* messageBox = new QMessageBox();
     messageBox->setText(message);
@@ -90,19 +97,13 @@ void main_window::set_progress(qint8 const &percent) {
 }
 
 void main_window::delete_items() {
-    auto answer = QMessageBox::question(this, "Deleting", "Do you want to delete selected files?");
+    auto sel_items = ui->treeWidget->selectedItems();
+    auto answer = QMessageBox::question(this, "Deleting",
+                                        "Do you want to delete " + QString::number(sel_items.size()) + " selected files?");
     if (answer == QMessageBox::No) {
         return;
     }
-    auto sel_items = ui->treeWidget->selectedItems();
-//    for (auto const &item : sel_items) {
-//        if (!QFile(item->text(0)).exists()) {
-//            for (auto const &child : item->takeChildren()) {
-//                child->setSelected(true);
-//            }
-//        }
-//    }
-//    sel_items = ui->treeWidget->selectedItems();
+    QVector<QString> cantDelete;
     for (auto const &item : sel_items) {
         QFile file(dir + item->text(0));
         if (file.remove()) {
@@ -112,7 +113,16 @@ void main_window::delete_items() {
                 item->parent()->setText(0, QString("Duplicate " + QString::number(item->parent()->childCount() - 1) + " files"));
                 item->parent()->removeChild(item);
             }
+        } else {
+            cantDelete.append(item->text(0));
         }
+    }
+    if (cantDelete.size() > 0) {
+        QString message = "Can't delete files :\n";
+        for (auto const &filepath : cantDelete) {
+            message += filepath + "\n";
+        }
+        show_message(message);
     }
 }
 
