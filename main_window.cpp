@@ -133,7 +133,7 @@ void main_window::delete_items() {
         }
     }
     if (cantDelete.size() > 0) {
-        QString message = "Can't delete files :\n";
+        QString message = "Can't delete " + QString::number(cantDelete.size()) + " files :\n";
         for (auto const &filepath : cantDelete) {
             message += filepath + "\n";
         }

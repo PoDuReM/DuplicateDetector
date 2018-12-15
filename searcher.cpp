@@ -106,7 +106,7 @@ void Searcher::get_duplicates(QString const &dir) {
 
 void Searcher::stop_search(QVector<QString> const &cantOpen) {
     if (cantOpen.size() > 0) {
-        QString message = "Can't open files :\n";
+        QString message = "Can't open " + QString::number(cantOpen.size()) + " files :\n";
         for (auto const &filepath : cantOpen) {
             message += filepath + "\n";
         }
